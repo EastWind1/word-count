@@ -30,4 +30,7 @@ export function registerAPIHandle(db: DB) {
   ipcMain.handle('api.db.findAssociationsById', (_, id: number) => {
     return db.findAssociationsById(id)
   })
+  ipcMain.handle('api.db.findAssociatedById', (_, id: number, fetchOneLayer: boolean) => {
+    return db.findAssociatedById(id, fetchOneLayer)
+  })
 }

@@ -102,7 +102,7 @@ export class DB {
     return row
   }
   /**
-   * 根据名称查询关键词
+   * 根据id查找关联的关键词
    * @param name 关键词名称
    * @returns 关键词，若未查询到则为null
    */
@@ -114,6 +114,28 @@ export class DB {
         `
       )
       .all() as Word[]
+    return rows
+  }
+  /**
+   * 查询关键词被哪些词关联
+   * @param id 关键词id
+   * @param fetchOneLayer 是否只查询直接下级，而非所有
+   * @returns 被关联词列表
+   */
+  findAssociatedById(id: number, fetchOneLayer: boolean): Word[] {
+    let sql = `
+    SELECT id, name, count, layer 
+    FROM word 
+    WHERE id IN (SELECT DISTINCT originId FROM association WHERE targetId = ${id})
+
+    `
+    if (fetchOneLayer) {
+      const layer = this.db.prepare(`SELECT layer FROM word WHERE id = ${id}`).get() as number
+      sql += ` AND layer = ${layer + 1};`
+    } else {
+      sql += ';'
+    }
+    const rows = this.db.prepare(sql).all() as Word[]
     return rows
   }
   /**
@@ -175,14 +197,20 @@ export class DB {
    * @param word 待增加计数的关键字
    */
   addCount(word: Word) {
-    const assocaitions = this.db
-      .prepare(`SELECT targetId from association WHERE originId = ${word.id}`)
-      .all() as number[]
-    this.db.transaction(() => {
-      assocaitions.forEach((id) => {
-        this.db.prepare(`UPDATE word SET count = count + 1 WHERE id = ${id}`).run()
+    // 递归增加关联词的计数
+    const recursion = (id: number) => {
+      const assocaitions = this.db
+        .prepare(`SELECT targetId from association WHERE originId = ${id}`)
+        .all()
+      assocaitions.forEach((data) => {
+        const row = data as { targetId: number }
+        this.db.prepare(`UPDATE word SET count = count + 1 WHERE id = ${row.targetId}`).run()
+        recursion(row.targetId)
       })
-      this.db.prepare(`UPDATE word SET count = count + 1 WHERE id = ${word.id}`).run()
+    }
+
+    this.db.transaction(() => {
+      recursion(word.id)
     })()
   }
 

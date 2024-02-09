@@ -40,6 +40,13 @@ export interface API {
      * @returns 关联词数组
      */
     findAssociationsById: (id: number) => Promise<Word[]>
+    /**
+     * 查询关键词被哪些词关联
+     * @param id 关键词id
+     * @param fetchOneLayer 是否只查询直接下级，而非所有
+     * @returns 被关联词列表
+     */
+    findAssociatedById: (id: number, fetchOneLayer: boolean) => Promise<Word[]>
   }
 }
 /**
@@ -56,6 +63,8 @@ export const api: API = {
     findByName: (name: string) => ipcRenderer.invoke('api.db.findByName', name) as Promise<Word>,
     updateCount: (word: Word) => ipcRenderer.invoke('api.db.updateCount', word) as Promise<Word>,
     findAssociationsById: (id: number) =>
-      ipcRenderer.invoke('api.db.findAssociationsById', id) as Promise<Word[]>
+      ipcRenderer.invoke('api.db.findAssociationsById', id) as Promise<Word[]>,
+    findAssociatedById: (id: number, fetchOneLayer: boolean) =>
+      ipcRenderer.invoke('api.db.findAssociatedById', id, fetchOneLayer) as Promise<Word[]>
   }
 }

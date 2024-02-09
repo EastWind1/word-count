@@ -2,7 +2,13 @@
   <div class="add-button">
     <v-btn icon>
       <v-icon icon="mdi-plus"></v-icon>
-      <v-dialog v-model="dialog" persistent width="80vh" activator="parent">
+      <v-dialog
+        v-model="dialog"
+        persistent
+        width="80vh"
+        activator="parent"
+        @update:model-value="onDialogStateChange"
+      >
         <v-card>
           <v-card-title>
             <span class="text-h5">添加关键词</span>
@@ -34,6 +40,7 @@
                     label="关联词"
                     multiple
                     placeholder="在此处输入要关联的关键词"
+                    @update:model-value="onAssociateInputChanged"
                   >
                     <template #chip="{ props, item }">
                       <v-chip v-bind="props" :text="item.raw.name"></v-chip>
@@ -69,7 +76,7 @@
 
 <script setup lang="ts">
 import { Word } from '../../../common/word'
-import { Ref, onMounted } from 'vue'
+import { Ref } from 'vue'
 import { ref } from 'vue'
 const dialog = ref(false)
 
@@ -78,9 +85,14 @@ const selectAssociations: Ref<Word[]> = ref([])
 const items: Ref<Word[]> = ref([])
 const selectLayer = ref(1)
 
-onMounted(() => {
-  window.api.db.findAllByPage(10, 0).then(({ data }) => (items.value = data))
-})
+function onDialogStateChange(state: boolean) {
+  if (!state) {
+    return
+  }
+  window.api.db.findAllByPage(10, 0).then(({ data }) => {
+    items.value = data
+  })
+}
 
 async function save() {
   let word: Word
@@ -96,7 +108,7 @@ async function save() {
     word = {
       id: -1,
       name: wordName.value as string,
-      layer: 0,
+      layer: selectLayer.value,
       count: 0
     }
   }
@@ -110,6 +122,7 @@ async function save() {
     })
   })
   await window.api.db.updateCount(word)
+  clear()
   dialog.value = false
 }
 
@@ -119,6 +132,17 @@ async function onWordNameChanged(value) {
     selectLayer.value = selectWord.layer
     selectAssociations.value = await window.api.db.findAssociationsById(selectWord.id)
   }
+}
+
+async function onAssociateInputChanged() {
+  window.api.db.findAllByPage(10, 0).then(({ data }) => (items.value = data))
+}
+
+function clear() {
+  wordName.value = ''
+  selectAssociations.value = []
+  items.value = []
+  selectLayer.value = 3
 }
 </script>
 

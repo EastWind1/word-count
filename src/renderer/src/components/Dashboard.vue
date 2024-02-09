@@ -33,7 +33,6 @@ type ECOption = ComposeOption<
   | DatasetComponentOption
 >
 
-// 注册必须的组件
 echarts.use([
   TitleComponent,
   TooltipComponent,
@@ -57,7 +56,10 @@ const option: ECOption = {
   },
   xAxis: { type: 'category' },
   yAxis: {},
-  series: [{ type: 'bar' }]
+  series: [{ type: 'bar' }],
+  tooltip: {
+    trigger: 'item'
+  }
 }
 
 window.addEventListener('resize', () => chart?.resize())
