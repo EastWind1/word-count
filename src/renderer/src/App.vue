@@ -23,7 +23,7 @@
     </v-navigation-drawer>
     <v-main style="min-height: 250px">
       <router-view></router-view>
-      <add-button></add-button>
+      <add-button v-draggable></add-button>
     </v-main>
   </v-layout>
 </template>

@@ -147,10 +147,22 @@ export class DB {
     const row = this.db
       .prepare(
         `
-          SELECT id, name, count, layer FROM word WHERE name = ${name};
+          SELECT id, name, count, layer FROM word WHERE name = '${name}';
         `
       )
       .get() as Word
+    if (row) {
+      const associations = this.db
+        .prepare(
+          `
+          SELECT id, name, count, layer 
+          FROM word 
+          WHERE id in (SELECT targetId FROM association WHERE originId = ${row.id});
+        `
+        )
+        .get() as Word[]
+      row.associations = associations
+    }
     return row
   }
   /**
@@ -159,6 +171,10 @@ export class DB {
    * @returns 插入后的关键词，包含id
    */
   insert(word: Word): Word {
+    const existWord = this.findByName(word.name)
+    if (existWord) {
+      return existWord
+    }
     const transactionInsert = this.db.transaction((word: Word) => {
       const result = this.db
         .prepare(
@@ -227,5 +243,21 @@ export class DB {
       )
       .get() as { [key: string]: number }
     return res['count']
+  }
+  /**
+   * 根据名称模糊查询
+   * @param keyword 关键词
+   */
+  findByNameLike(keyword: string): Word[] {
+    const rows = this.db
+      .prepare(
+        `
+        SELECT id, name, count, layer 
+        FROM word 
+        WHERE name LIKE '%${keyword}%'
+      `
+      )
+      .all() as Word[]
+    return rows
   }
 }

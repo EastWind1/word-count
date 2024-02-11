@@ -20,10 +20,11 @@
                   <v-combobox
                     v-model="wordName"
                     label="关键词"
-                    :items="items"
+                    :items="nameItems"
                     item-value="name"
                     item-title="name"
                     placeholder="在此处输入要添加的关键词"
+                    auto-select-first="exact"
                     @update:model-value="onWordNameChanged"
                   ></v-combobox>
                 </v-col>
@@ -32,7 +33,7 @@
                 <v-col cols="12">
                   <v-autocomplete
                     v-model="selectAssociations"
-                    :items="items"
+                    :items="associationItems"
                     chips
                     closable-chips
                     item-title="name"
@@ -82,15 +83,17 @@ const dialog = ref(false)
 
 const wordName = ref<string | undefined>('')
 const selectAssociations: Ref<Word[]> = ref([])
-const items: Ref<Word[]> = ref([])
+const nameItems: Ref<Word[]> = ref([])
+const associationItems: Ref<Word[]> = ref([])
 const selectLayer = ref(1)
 
 function onDialogStateChange(state: boolean) {
   if (!state) {
     return
   }
-  window.api.db.findAllByPage(10, 0).then(({ data }) => {
-    items.value = data
+  window.api.db.findAllByPage(30, 0).then(({ data }) => {
+    nameItems.value = data
+    associationItems.value = data
   })
 }
 
@@ -127,21 +130,26 @@ async function save() {
 }
 
 async function onWordNameChanged(value) {
+  let text
   if (typeof value === 'object') {
+    // 若选择了某一项，则自动赋值
     const selectWord = value as Word
+    text = selectWord.name
     selectLayer.value = selectWord.layer
     selectAssociations.value = await window.api.db.findAssociationsById(selectWord.id)
+  } else {
+    text = value
   }
+  nameItems.value = await window.api.db.findByNameLike(text)
 }
 
-async function onAssociateInputChanged() {
-  window.api.db.findAllByPage(10, 0).then(({ data }) => (items.value = data))
+async function onAssociateInputChanged(value) {
+  nameItems.value = await window.api.db.findByNameLike(value)
 }
 
 function clear() {
   wordName.value = ''
   selectAssociations.value = []
-  items.value = []
   selectLayer.value = 3
 }
 </script>

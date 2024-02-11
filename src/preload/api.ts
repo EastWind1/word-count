@@ -29,6 +29,11 @@ export interface API {
      */
     findByName: (name: string) => Promise<Word>
     /**
+     * 根据关键词模糊查询
+     * @param keyword 关键词
+     */
+    findByNameLike: (keyword: string) => Promise<Word[]>
+    /**
      * 更新关键词计数
      * @param word 待更新关键词,若关键词id为-1,表示新增并计数设为1，否则表示更新
      * @returns 保存后的关键词
@@ -61,6 +66,8 @@ export const api: API = {
       }>,
     findById: (id: number) => ipcRenderer.invoke('api.db.findById', id) as Promise<Word>,
     findByName: (name: string) => ipcRenderer.invoke('api.db.findByName', name) as Promise<Word>,
+    findByNameLike: (keyword: string) =>
+      ipcRenderer.invoke('api.db.findByNameLike', keyword) as Promise<Word[]>,
     updateCount: (word: Word) => ipcRenderer.invoke('api.db.updateCount', word) as Promise<Word>,
     findAssociationsById: (id: number) =>
       ipcRenderer.invoke('api.db.findAssociationsById', id) as Promise<Word[]>,

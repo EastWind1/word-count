@@ -11,6 +11,9 @@ export function registerAPIHandle(db: DB) {
     const total = db.getCount()
     return { data, total }
   })
+  ipcMain.handle('api.db.findByNameLike', (_, keyword: string) => {
+    return db.findByNameLike(keyword)
+  })
   ipcMain.handle('api.db.findById', (_, id: number) => {
     return db.findById(id)
   })
