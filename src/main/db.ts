@@ -18,7 +18,11 @@ export class DB {
   connect(): Database.Database {
     const dataDir = app.getPath('appData')
     const dbPath = path.join(dataDir, 'word-count', 'word-count.db')
-    const db = new Database(dbPath)
+    const options: Database.Options = {}
+    if (!app.isPackaged) {
+      options.verbose = console.log
+    }
+    const db = new Database(dbPath, options)
     db.pragma('journal_mode = WAL')
     return db
   }
@@ -130,8 +134,10 @@ export class DB {
 
     `
     if (fetchOneLayer) {
-      const layer = this.db.prepare(`SELECT layer FROM word WHERE id = ${id}`).get() as number
-      sql += ` AND layer = ${layer + 1};`
+      const layerResult = this.db.prepare(`SELECT layer FROM word WHERE id = ${id}`).get() as {
+        layer: number
+      }
+      sql += ` AND layer = ${layerResult.layer + 1};`
     } else {
       sql += ';'
     }
@@ -164,6 +170,20 @@ export class DB {
       row.associations = associations
     }
     return row
+  }
+  /**
+   * 根据层级查找关键词
+   * @param layer 层级
+   * @returns 关联词
+   */
+  findByLayer(layer: number): Word[] {
+    return this.db
+      .prepare(
+        `
+          SELECT id, name, count, layer FROM word WHERE layer = ${layer};
+        `
+      )
+      .all() as Word[]
   }
   /**
    * 插入

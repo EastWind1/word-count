@@ -71,7 +71,21 @@ onMounted(() => {
   chart = echarts.init(chartElement.value)
   chart.showLoading()
   chart.setOption(option)
-  window.api.db.findAllByPage(10, 0).then(({ data }) => {
+  chart.on('click', (params) => {
+    window.api.db.findAssociatedById(params.data['id'], true).then((data) => {
+      if (!data.length) {
+        return
+      }
+      chart.setOption({
+        dataset: {
+          dimensions: ['name', 'count'],
+          source: data
+        }
+      })
+    })
+  })
+
+  window.api.db.findByLayer(1).then((data) => {
     chart.setOption({
       dataset: {
         dimensions: ['name', 'count'],

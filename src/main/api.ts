@@ -20,6 +20,9 @@ export function registerAPIHandle(db: DB) {
   ipcMain.handle('api.db.findByName', (_, name: string) => {
     return db.findByName(name)
   })
+  ipcMain.handle('api.db.findByLayer', (_, layer: number) => {
+    return db.findByLayer(layer)
+  })
   ipcMain.handle('api.db.updateCount', (_, word: Word) => {
     if (word.id === -1) {
       db.db.transaction(() => {

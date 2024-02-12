@@ -29,6 +29,12 @@ export interface API {
      */
     findByName: (name: string) => Promise<Word>
     /**
+     * 根据层级查找关键词
+     * @param layer 层级
+     * @returns 关联词
+     */
+    findByLayer: (layer: number) => Promise<Word[]>
+    /**
      * 根据关键词模糊查询
      * @param keyword 关键词
      */
@@ -66,6 +72,8 @@ export const api: API = {
       }>,
     findById: (id: number) => ipcRenderer.invoke('api.db.findById', id) as Promise<Word>,
     findByName: (name: string) => ipcRenderer.invoke('api.db.findByName', name) as Promise<Word>,
+    findByLayer: (layer: number) =>
+      ipcRenderer.invoke('api.db.findByLayer', layer) as Promise<Word[]>,
     findByNameLike: (keyword: string) =>
       ipcRenderer.invoke('api.db.findByNameLike', keyword) as Promise<Word[]>,
     updateCount: (word: Word) => ipcRenderer.invoke('api.db.updateCount', word) as Promise<Word>,
